@@ -1,9 +1,11 @@
 <template>
   <div class="login-container">
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
-
       <div class="title-container">
-        <h3 class="title">Login Form</h3>
+        <div class="logo">
+          <img src="@/assets/logo.png">
+        </div>
+        <h3 class="title">SuperAI</h3>
       </div>
 
       <el-form-item prop="username">
@@ -41,13 +43,7 @@
         </span>
       </el-form-item>
 
-      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
-
-      <div class="tips">
-        <span style="margin-right:20px;">username: admin</span>
-        <span> password: any</span>
-      </div>
-
+      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">登录</el-button>
     </el-form>
   </div>
 </template>
@@ -74,8 +70,8 @@ export default {
     }
     return {
       loginForm: {
-        username: 'admin',
-        password: '111111'
+        username: 'tom',
+        password: '123456'
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -152,7 +148,7 @@ $cursor: #fff;
       -webkit-appearance: none;
       border-radius: 0px;
       padding: 12px 5px 12px 15px;
-      color: $light_gray;
+      color: black;
       height: 47px;
       caret-color: $cursor;
 
@@ -176,25 +172,35 @@ $cursor: #fff;
 $bg:#2d3a4b;
 $dark_gray:#889aa4;
 $light_gray:#eee;
+$black: #000000;
 
 .login-container {
   min-height: 100%;
   width: 100%;
-  background-color: $bg;
+  background-image: url(~@/assets/bg.png);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  //background-position: center top;
   overflow: hidden;
 
   .login-form {
+    border: 1px solid #dcdfe6;
     position: relative;
-    width: 520px;
+    width: 400px;
     max-width: 100%;
-    padding: 160px 35px 0;
-    margin: 0 auto;
+    padding: 35px 35px 15px 35px;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    box-shadow: 0 0 25px #909399;
+    margin: 100px auto;
     overflow: hidden;
+    background: white;
   }
 
   .tips {
     font-size: 14px;
-    color: #fff;
+    color: black;
     margin-bottom: 10px;
 
     span {
@@ -206,7 +212,7 @@ $light_gray:#eee;
 
   .svg-container {
     padding: 6px 5px 6px 15px;
-    color: $dark_gray;
+    color: black;
     vertical-align: middle;
     width: 30px;
     display: inline-block;
@@ -215,9 +221,13 @@ $light_gray:#eee;
   .title-container {
     position: relative;
 
+    .logo {
+      text-align: center;
+    }
+
     .title {
-      font-size: 26px;
-      color: $light_gray;
+      font-size: 34px;
+      color: $black;
       margin: 0px auto 40px auto;
       text-align: center;
       font-weight: bold;
@@ -229,7 +239,7 @@ $light_gray:#eee;
     right: 10px;
     top: 7px;
     font-size: 16px;
-    color: $dark_gray;
+    color: black;
     cursor: pointer;
     user-select: none;
   }

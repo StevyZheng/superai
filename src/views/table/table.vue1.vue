@@ -5,7 +5,7 @@
         <tr>
           <th><el-checkbox v-model="checkAll" :indeterminate="isIndeterminate" @change="handleCheckAllChange">全选</el-checkbox></th>
           <th><el-button type="primary" size="small" @click="handleAdd">新建</el-button></th>
-          <th><el-button type="primary" size="small" @click="handleDelete(scope.$index,scope.row)">批量删除</el-button></th>
+          <th><el-button type="primary" size="small" @click="handleAdd">批量删除</el-button></th>
         </tr>
       </table>
     </div>
@@ -24,7 +24,7 @@
       </el-table-column>
       <el-table-column align="center" label="ID" width="95">
         <template slot-scope="scope">
-          {{ scope.row.id + 1 }}
+          {{ scope.row.id }}
         </template>
       </el-table-column>
       <el-table-column align="center" label="用户名">
@@ -71,7 +71,7 @@
         <!-- </template> -->
         <template slot-scope="scope">
           <el-button type="primary" size="small" @click="handleEdit(scope.row)">修改</el-button>
-          <el-button type="primary" size="small" @click="handleDelete(scope.row)">删除</el-button>
+          <el-button type="primary" size="small">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -85,7 +85,7 @@
     />
 
     <el-dialog
-      :title="dialogTitle"
+      :title="operation?'新增'：'编辑'"
       width="40%"
       :visible.sync="dialogVisible"
       :close-on-click-modal="false"
@@ -98,7 +98,7 @@
         size="small"
         label-position="right"
       >
-        <el-form-item label="ID" prop="id">
+        <el-form-item label="ID" prop="id" v-if="false">
           <el-input v-model="dataForm.id" :disabled="true" auto-complete="off" />
         </el-form-item>
         <el-form-item label="用户名" prop="name">
@@ -110,7 +110,7 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="dataForm.email" auto-complete="off" />
         </el-form-item>
-        <el-form-item label="所属租户" prop="rent">
+        <el-form-item label="所属租户" prop="rent" v-if="!operation">
           <el-input v-model="dataForm.roleName" auto-complete="off" />
         </el-form-item>
       </el-form>
@@ -125,7 +125,6 @@
 
 <script>
 import { getList } from '@/api/table'
-import { handleEditUser, handleAddUser, handleDeleteUser } from '@/api/user'
 
 export default {
   filters: {
@@ -138,16 +137,15 @@ export default {
       return statusMap[status]
     }
   },
-  inject: ['reload'],
   data() {
     return {
       tableData: [],
       checkAll: false,
       listLoading: true,
-      dialogTitle: '新建',
+      operation:false,
       dialogVisible: false,
       dataForm: {
-        id: '',
+        id: 0,
         name: '',
         password: '',
         roleName: ''
@@ -166,9 +164,6 @@ export default {
       getList().then(response => {
         console.log(response.data)
         this.tableData = response.data
-        for (let i = 0, len = response.data.length; i < len; i++) {
-          response.data[i].id = i
-        }
         // this.tableData = [
         //   {
         //     name: '1',
@@ -187,9 +182,13 @@ export default {
         item.checked = val
       })
     },
-    handleCheckItemChange(val) {
-      for (let i = 0, l = this.tableData.length; i < l; i++) {
-        if (this.tableData[i].checked !== val) {
+    // 批量删除
+    handleDelete: function (val) {
+      this.$api.user.batchDelete(data.params).then(data!=null?data.callback:'')
+    },
+    handleCheckItemChange(val)
+    {for (let i = 0, l = this.tableData.length; i < l; i++) 
+     if (this.tableData[i].checked !== val) {
           this.checkAll = false
           return
         }
@@ -201,44 +200,36 @@ export default {
     },
     handleAdd() {
       this.dialogVisible = true
-      this.dialogTitle = '新建'
+      this.operation = true
       this.dataForm = {
-        id: '1',
-        name: 'tom',
-        password: '123456',
-        email: '23322@qq.com',
-        rolename: 'user'
-      }
-      this.dataForm.flag = 1
+        id: 0,
+        name:'tom',
+        password:'123456',
+        email:'23322@qq.com',
+        rolename:'user'
+      } 
     },
-    handleEdit(val) {
+    // 显示编辑界面
+		handleEdit: function (params) {
+			this.dialogVisible = true
+			this.operation = false
+			this.dataForm = Object.assign({}, params.row)
+			let rolename = []
+			for(let i=0,len=params.row.rolename.length; i<len; i++) {
+				rolename.push(params.row.rolename[i].id)
+			}
+			this.dataForm.rolename = rolename
+		},
+
+   /* handleEdit(val) {
       this.dialogTitle = '修改'
       this.dataForm.id = val.index
-      this.dataForm.name = val.name
-      this.dataForm.rolename = val.rolename
+      this.dataForm.username = val.username
       this.dataForm.password = val.password
-      this.dataForm.email = val.email
+      this.dataForm.rent = val.rent
       this.dialogVisible = true
-      this.dataForm.flag = 2
     },
-    // 批量删除
-    handleDelete: function(data) {
-      const names = { 'name': data.name }
-      handleDeleteUser(names).then(data != null ? this.reload() : '')
-    },
-    // 显示编辑界
-    /* handleEdit: function(params) {
-      this.dialogVisible = true
-      this.operation = false
-      this.dataForm = Object.assign({}, params.row)
-      const rolename = []
-      for (let i = 0, len = params.row.rolename.length; i < len; i++) {
-        name.push(params.row.rolename[i].id)
-      }
-      this.dataForm.rolename = name
-    },*/
-
-    /* submitForm() {
+    submitForm() {
       this.$refs.dataForm.validate((valid) => {
         if (valid) {
           this.$confirm('确认提交吗？', '提示', {}).then(() => {
@@ -247,66 +238,43 @@ export default {
         }
       })
     },*/
-    // 编辑
-    submitForm: function() {
-      this.$refs.dataForm.validate((valid) => {
-        if (valid) {
-          this.$confirm('确认提交吗？', '提示', {}).then(() => {
-            this.editLoading = true
-            const params = Object.assign({}, this.dataForm)
-            if (params.flag === 1) {
-              // const datas = { 'name': 'tom', 'password': '123456', 'email': '23322@qq.com', 'rolename': 'user' }
-              handleAddUser(params).then((res) => {
-                console.log(res.code)
-                this.editLoading = false
-                if (res.code === 204) {
-                  this.$message({ message: '操作成功', type: 'success' })
-                  this.dialogVisible = false
-                  this.$refs['dataForm'].resetFields()
-                  this.reload()
-                } else {
-                  this.$message({ message: '操作失败, ' + res.msg, type: 'error' })
-                }
-                this.findPage(null)
-              })
-            }
-            if (params.flag === 2) {
-              const name = this.dataForm.name
-              const datas = { 'before': { 'name': name }, 'after': params }
-              handleEditUser(datas).then((res) => {
-                this.editLoading = false
-                if (res.code === 204) {
-                  this.$message({ message: '操作成功', type: 'success' })
-                  this.dialogVisible = false
-                  this.$refs['dataForm'].resetFields()
-                  this.reload()
-                } else {
-                  this.$message({ message: '操作失败, ' + res.msg, type: 'error' })
-                }
-                this.findPage(null)
-              })
-            }
-          })
-        }
-      })
-    },
+// 编辑
+		submitForm: function () {
+			this.$refs.dataForm.validate((valid) => {
+				if (valid) {
+					this.$confirm('确认提交吗？', '提示', {}).then(() => {
+						this.editLoading = true
+						let params = Object.assign({}, this.dataForm)
+						let rolename = []
+						for(let i=0,len=params.rolename.length; i<len; i++) {
+							let rolename = {
+								
+								roleId: params.userRoles[i]
+							}
+							userRoles.push(userRole)
+						}
+						params.userRoles = userRoles
+						this.$api.user.save(params).then((res) => {
+							this.editLoading = false
+							if(res.code == 200) {
+								this.$message({ message: '操作成功', type: 'success' })
+								this.dialogVisible = false
+								this.$refs['dataForm'].resetFields()
+							} else {
+								this.$message({message: '操作失败, ' + res.msg, type: 'error'})
+							}
+							this.findPage(null)
+						})
+					})
+				}
+			})
+		},
     handleSizeChange(val) {
       this.pageSize = val
     },
     handleCurrentChange(val) {
       this.currentPage = val
     }
-    /* handleDelete:(data)=>{
-      let dog = {
-        name: 'Tom'
-      }
-      let dogs = []
-      dogs.push(dog)
-      console.log(dogs);
-      dogs.splice(dog);
-      console.log(dogs);
-      console.log('dogs.length:' + dogs.length);
-    }*/
   }
-}
+  } 
 </script>
